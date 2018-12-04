@@ -1,0 +1,3 @@
+[submodule "universal_robot"]
+	path = universal_robot
+	url = git@github.com:roamlab/universal_robot.git
