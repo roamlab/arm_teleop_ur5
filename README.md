@@ -1,13 +1,15 @@
 Arm Teleoperation - Universal Robot
 ==============================
 ## Prerequisite and dependencies
-* Install ROS
+* Install [ROS](http://wiki.ros.org/ROS/Installation)
+* Install [ROS-Industrial](http://wiki.ros.org/Industrial/Install)
 
 ## Install & Compiling 
 We are using `catkin_make` for this repo, and first, let's set up the workspace:    
 * `mkdir -p catkin_ws/src`  
 * `cd catkin_ws`  
 * `catkin_make`  
+
 Then, let's get the code (if this is the first time you download this repo):
 * `cd src`  
 * `git clone git@github.com:roamlab/arm_teleop_ur5.git --recursive`  
