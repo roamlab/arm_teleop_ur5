@@ -1,0 +1,5 @@
+<launch>
+	  <include file="$(find nasa_hand_robot)/launch/nasa_hand_no_UI.launch">
+	  </include>
+	  <node name="universal_robot_cisst" pkg="universal_robot_ros" type="universal_robot" args="-i 192.168.1.202"/>
+</launch>
