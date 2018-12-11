@@ -6,7 +6,7 @@ Arm Teleoperation - Universal Robot
 * Downlaod and build [cisst-saw](https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-building-using-catkin-build-tools-for-ros), using **catkin build tools** in a **seperate** workspace.  
 **Note:** In this application, we use the **[sawUniversalRobot](https://github.com/jhu-saw/sawUniversalRobot/tree/devel)** component to establish an interface that we can set velocities at 125 Hz.
 
-## Install & Compiling 
+## Compiling 
 We are using `catkin_make` for this repo, and first, let's set up the workspace:    
 * `mkdir -p catkin_ws/src`  
 * `cd catkin_ws`  
@@ -17,8 +17,13 @@ Then, let's get the code (if this is the first time you download this repo):
 * `git clone git@github.com:roamlab/arm_teleop_ur5.git --recursive`  
 * `cd arm_teleop_ur5`  
 * `bash update_repo.sh`  
-* `cd ../..`  
-* `catkin_make`  Note that if the first time `catkin_make` failed, try it again, it should succeed in the second time.
+
+Finally, to compile, since this repo depends on another catkin workspace, we need to [overlay workspaces](http://wiki.ros.org/catkin/Tutorials/workspace_overlaying)
+* `cd catkin_ws`  
+* `rm -rf build` & `rm -rf devel`  
+* IMPORTANT `source <cisst_catkin_ws/devel_release/setup.bash>`  
+* `catkin_make`  
+Note that if the first time `catkin_make` failed, try it again, it should succeed in the second time.
 
 ## Running Instructions
 Before running the code, you need to source and define env var:  
