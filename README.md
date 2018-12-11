@@ -19,3 +19,10 @@ Then, let's get the code (if this is the first time you download this repo):
 * `bash update_repo.sh`  
 * `cd ../..`  
 * `catkin_make`  Note that if the first time `catkin_make` failed, try it again, it should succeed in the second time.
+
+## Running Instructions
+Before running the code, you need to source and define env var:  
+`source <teleop_catkin_workspace>/devel/setup.bash`  
+`source <cisst_catkin_workspace>/devel_release/setup.bash`  
+`export ARM_TELEOP_UR5_SRC="<arm_teleop_ur5/src>"`  
+You may also choose to copy them at the end of your `~/.bashrc` file
