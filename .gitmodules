@@ -1,7 +1,3 @@
 [submodule "universal_robot"]
 	path = universal_robot
 	url = git@github.com:roamlab/universal_robot.git
-[submodule "user_input/teleop_twist_keyboard"]
-	path = user_input/teleop_twist_keyboard
-	url = git@github.com:roamlab/teleop_twist_keyboard.git
-	branch = master
