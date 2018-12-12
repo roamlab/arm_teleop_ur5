@@ -10,7 +10,7 @@ cd "$src_path$ur_sub_dir"
 echo "Updating: $(pwd)"
 git checkout kinetic-devel
 git pull
-cd "$src_path$teleop_twist_keyboard"
+cd "$src_path$teleop_keyboard_dir"
 echo "Updating: $(pwd)"
 git checkout master
 git pull
