@@ -15,7 +15,7 @@ import ConfigParser
 import ast
 import sys
 # remove the following debugging util after finishing
-import ipdb
+# import ipdb
 
 def read_config_file(config_file_name):
     config_data = ConfigParser.ConfigParser()
