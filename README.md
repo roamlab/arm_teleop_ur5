@@ -11,7 +11,7 @@ Arm Teleoperation - Universal Robot
 * Install `ipdb` for setting break point in command line ipython  
 `sudo apt-get install python-ipdb`
 
-## Compiling 
+## Downlaod & Compiling 
 We are using `catkin_make` for this repo, and first, let's set up the workspace:    
 * `mkdir -p catkin_ws/src`  
 * `cd catkin_ws`  
