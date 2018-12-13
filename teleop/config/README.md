@@ -23,7 +23,7 @@ vector_in_B = TF_A2B * vector_in_A
 * **TF_view2robot_rot_Z** - the **x** axis ...
 * **TF_view2robot_trans** - the translation portion (origin position) of the homogenous transformation.
 * **command_type** - can either be twist or pose, which corresponds to sending combined linear/angular velocities or a relative pose
-* **command_reference_frame** - can either be **tool_frame** or **base_frame**, where **tool_frame** is more suitable if a camera is mounted on the end-effector.
+* **command_reference_frame** - can either be **end_effector_frame** or **base_frame**, where **end_effector_frame** is more desirable if a camera is mounted on the end-effector.
 * **rostopic_pose_current** - rostopic to listen on, fetching the current pose (cartesian position and orientaion) 
 * **rostopic_joint_current** - rostopic to listen on, fetching the current joint states (joint angles, joint velocities, joint effort if available)
 * **rostopic_pose_set** - rostopic to publish on, writing the desired commanding robot pose (position and orientation)
