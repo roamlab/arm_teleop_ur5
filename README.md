@@ -5,6 +5,11 @@ Arm Teleoperation - Universal Robot
 * Install [ROS-Industrial](http://wiki.ros.org/Industrial/Install)
 * Downlaod and build [cisst-saw](https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-building-using-catkin-build-tools-for-ros), using **catkin build tools** in a **seperate** workspace.  
 **Note:** In this application, we use the **[sawUniversalRobot](https://github.com/jhu-saw/sawUniversalRobot/tree/devel)** component to establish an interface that we can set velocities at 125 Hz.
+## [Optional] Debuggin interface and tools
+* Install iPython  
+`sudo apt-get install ipython`
+* Install `ipdb` for setting break point in command line ipython  
+`sudo apt-get install python-ipdb`
 
 ## Compiling 
 We are using `catkin_make` for this repo, and first, let's set up the workspace:    
