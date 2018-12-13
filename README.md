@@ -3,8 +3,10 @@ Arm Teleoperation - Universal Robot
 ## Prerequisite and dependencies
 * Install [ROS](http://wiki.ros.org/ROS/Installation)
 * Install [ROS-Industrial](http://wiki.ros.org/Industrial/Install)
+* Install [MoveIt](https://moveit.ros.org/install/) `sudo apt-get install ros-kinetic-moveit`
 * Downlaod and build [cisst-saw](https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-building-using-catkin-build-tools-for-ros), using **catkin build tools** in a **seperate** workspace.  
 **Note:** In this application, we use the **[sawUniversalRobot](https://github.com/jhu-saw/sawUniversalRobot/tree/devel)** component to establish an interface that we can set velocities at 125 Hz.
+
 ## [Optional] Debuggin interface and tools
 * Install iPython  
 `sudo apt-get install ipython`
