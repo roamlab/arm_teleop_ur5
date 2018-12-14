@@ -5,3 +5,7 @@
 	path = user_input/teleop_twist_keyboard
 	url = git@github.com:roamlab/teleop_twist_keyboard.git
 	branch = master
+[submodule "user_input/teleop_twist_joy"]
+	path = user_input/teleop_twist_joy
+	url = git@github.com:roamlab/teleop_twist_joy.git
+	branch = indigo-devel

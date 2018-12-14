@@ -6,6 +6,7 @@ git submodule update --init --recursive
 src_path=$(pwd)
 ur_sub_dir="/universal_robot"
 teleop_keyboard_dir="/user_input/teleop_twist_keyboard"
+teleop_joy_dir="/user_input/teleop_twist_joy"
 cd "$src_path$ur_sub_dir"
 echo "Updating: $(pwd)"
 git checkout kinetic-devel
@@ -14,4 +15,7 @@ cd "$src_path$teleop_keyboard_dir"
 echo "Updating: $(pwd)"
 git checkout master
 git pull
+cd "$src_path$teleop_joy_dir"
+git checkout indigo-devel
+git pull origin indigo-devel
 cd "$src_path"
