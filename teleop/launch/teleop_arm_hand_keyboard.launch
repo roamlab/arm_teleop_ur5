@@ -1,0 +1,13 @@
+<launch>
+	  <!-- run NASA Hand -->
+	  <include file="$(find nasa_hand_robot)/launch/nasa_hand.launch">
+	  </include>
+	  <!-- run UR5 -->
+	  <node name="universal_robot_cisst" pkg="universal_robot_ros" type="universal_robot" args="-i 192.168.1.202"/>
+	  <!-- run teleop interface -->
+  	  <include file="$(find teleop_twist_joy)/launch/teleop.launch">
+  	  	<arg name="joy_config" default="ps3-space6D" />
+  	  </include>
+  	  <!-- run the teleop node -->
+<!-- 	  <node name="teleop_main" pkg="teleop" type="teleop_twist.py" args="joy_tool_frame_3.cfg"/> -->  	  
+</launch>

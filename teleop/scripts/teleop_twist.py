@@ -8,6 +8,7 @@ from geometry_msgs.msg import Pose, PoseStamped, Twist, TwistStamped
 from tf_conversions import posemath as PoseMath
 from std_msgs.msg import Int32
 from sensor_msgs.msg import JointState
+from sensor_msgs.msg import Joy
 # from sensor_msgs.msg import JointState
 import subprocess as sp
 import os
@@ -15,7 +16,7 @@ import ConfigParser
 import ast
 import sys
 # remove the following debugging util after finishing
-# import ipdb
+import ipdb
 
 def read_config_file(config_file_name):
     config_data = ConfigParser.ConfigParser()
@@ -39,7 +40,12 @@ def convert_PyKDL_to_geometry_msgs_twist(twist_PyKDL):
     twist.angular.z = twist_PyKDL.rot.z()
     return twist
 
-
+class EndEffectorCommand:
+    def __init__(self):
+        self.action = 'disabled'
+        self.value = 0 # this value depends on the action
+        # in particular, if the action=="roll", 
+        # then the value is the desired rolling (spread) level, [0,1]
 
 class UserInterfaceDevice:
     def __init__(self, config_file_name):
@@ -74,18 +80,20 @@ class UserInterfaceDevice:
         self.sub_manipulator_comd = rospy.Subscriber(
             rostopic_manipulator_comd, Twist, self.manipulator_comd_CB)
         # subscriber - end-effector command from user input 
-        rostopic_manipulator_comd = config_data.get(
+        # for now, it is assumed that the joy states are sent
+        rostopic_end_effector_comd = config_data.get(
             'user_interface', 'rostopic_end_effector_comd')
-        self.end_effector_comd = 0
+        self.end_effector_comd = EndEffectorCommand()
         self.sub_end_effector_comd = rospy.Subscriber(
-            rostopic_manipulator_comd, Int32, self.end_effector_comd_CB)
+            rostopic_end_effector_comd, Joy, self.end_effector_comd_CB)
 
     def manipulator_comd_CB(self,msg_data):
         # self.manipulator_comd is in in the type of [PrKDL.Twist]
         self.manipulator_comd = convert_geometry_msgs_to_PyKDL_twist(msg_data)
 
     def end_effector_comd_CB(self,msg_data):
-        self.end_effector_comd = msg_data.data
+        # self.end_effector_comd = msg_data
+        ipdb.set_trace()
 
 class Manipulator:
     def __init__(self, config_file_name):
@@ -195,7 +203,7 @@ class Teleop:
             # check if 
             if match:
                 self.compute_send_command()
-                sp.call('clear',shell=True)
+                # sp.call('clear',shell=True)
             self.rate.sleep()
 
     # def rob_curr_state_CB(self, msg_data):
