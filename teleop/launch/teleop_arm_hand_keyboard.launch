@@ -9,5 +9,5 @@
   	  	<arg name="joy_config" default="ps3-space6D" />
   	  </include>
   	  <!-- run the teleop node -->
-<!-- 	  <node name="teleop_main" pkg="teleop" type="teleop_twist.py" args="joy_tool_frame_3.cfg"/> -->  	  
+<!-- 	  <node name="teleop_main" pkg="teleop" type="teleop_main.py" args="joy_tool_frame_3.cfg"/> -->  	  
 </launch>

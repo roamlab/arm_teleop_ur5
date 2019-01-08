@@ -9,7 +9,7 @@ from tf_conversions import posemath as PoseMath
 from std_msgs.msg import Int32
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Joy
-# from sensor_msgs.msg import JointState
+from nasa_hand_msgs.msg import PoseLevels as NasaHandPoseLevels
 import subprocess as sp
 import os
 import ConfigParser
@@ -41,11 +41,19 @@ def convert_PyKDL_to_geometry_msgs_twist(twist_PyKDL):
     return twist
 
 class EndEffectorCommand:
-    def __init__(self):
-        self.action = 'disabled'
-        self.value = 0 # this value depends on the action
-        # in particular, if the action=="roll", 
-        # then the value is the desired rolling (spread) level, [0,1]
+    def __init__(self, config_file_name):
+        # read the config file
+        config_data = read_config_file(config_file_name)
+        self.action = 'disable'
+        self.joy_buttons_def =  ast.literal_eval(config_data.get(
+            'user_interface', 'joy_buttons_def'))
+
+    def decode_from_joy(self,joy):
+        self.action = "pause"
+        for action in self.joy_buttons_def:
+            if ((joy.buttons[self.joy_buttons_def.index(action)]==1) 
+                and (action!="N/A")):
+                self.action = action
 
 class UserInterfaceDevice:
     def __init__(self, config_file_name):
@@ -80,20 +88,22 @@ class UserInterfaceDevice:
         self.sub_manipulator_comd = rospy.Subscriber(
             rostopic_manipulator_comd, Twist, self.manipulator_comd_CB)
         # subscriber - end-effector command from user input 
-        # for now, it is assumed that the joy states are sent
+        # it is assumed that the joy states are sent
         rostopic_end_effector_comd = config_data.get(
             'user_interface', 'rostopic_end_effector_comd')
-        self.end_effector_comd = EndEffectorCommand()
+        self.end_effector_comd = EndEffectorCommand(config_file_name)
         self.sub_end_effector_comd = rospy.Subscriber(
             rostopic_end_effector_comd, Joy, self.end_effector_comd_CB)
 
     def manipulator_comd_CB(self,msg_data):
-        # self.manipulator_comd is in in the type of [PrKDL.Twist]
+        # msg_data is received in the type of [geometry_msgs/twist]
+        # self.manipulator_comd is presumed in the type of [PrKDL.Twist]
         self.manipulator_comd = convert_geometry_msgs_to_PyKDL_twist(msg_data)
 
     def end_effector_comd_CB(self,msg_data):
-        # self.end_effector_comd = msg_data
-        ipdb.set_trace()
+        # msg_data is received in the type of [sensor_msgs/Joy]
+        # this callback extracts the buttons that correspond to end-effector actions
+        self.end_effector_comd.decode_from_joy(msg_data)
 
 class Manipulator:
     def __init__(self, config_file_name):
@@ -152,6 +162,42 @@ class Manipulator:
     def joint_current_CB(self, msg_data):
         self.joint_current = msg_data
 
+class EndEffector:
+    def __init__(self, config_file_name):
+        # read the config file
+        config_data = read_config_file(config_file_name)
+        self.name = config_data.get(
+            'end_effector', 'name')
+        self.type = config_data.get(
+            'end_effector', 'type')
+        rostopic_action_set = config_data.get(
+            'end_effector', 'rostopic_action_set')
+        self.pub_action_set = rospy.Publisher(
+            rostopic_action_set, Int32, queue_size=1)
+        # hand specific
+        self.hand_open_def = NasaHandPoseLevels()
+        self.hand_open_def.flex=0.0
+        rostopic_hand_open_def = config_data.get(
+            'end_effector', 'rostopic_hand_open_def')
+        self.pub_hand_open_def = rospy.Publisher(
+            rostopic_hand_open_def, NasaHandPoseLevels, queue_size=1)
+
+    def send_command(self, action):
+        if (action=="grasp"):
+            self.pub_action_set.publish(1)
+        elif (action=="open"):
+            self.pub_action_set.publish(2)
+        elif (action=="spread"):
+            print("spreading")
+        elif (action=="unspread"):
+            print("unspreading")
+        elif (action=="pause"):
+            self.pub_action_set.publish(6)
+        elif (action=="disable"):
+            self.pub_action_set.publish(0)
+        else:
+            print("Wrong input for end-effector action, "+str(action),"\n")
+
 class Teleop:
     def __init__(self, config_file_name):
         # read the config file
@@ -170,8 +216,11 @@ class Teleop:
         # teleopeartion master to slave transformation
         self.tf_master2robot = (
             self.manipulator.tf_view2robot * self.user_interface.tf_dev2view)
+        # end-effector
+        self.end_effector = EndEffector(config_file_name)
 
     def compute_send_command(self):
+        # send manipulator command
         # for now, only twist mode is supported
         compatible = (self.manipulator.command_type=="twist")
         if compatible:
@@ -191,6 +240,8 @@ class Teleop:
             self.manipulator.pub_twist_set.publish(command_twist_msg)
         else:
             print("For now, only twist mode is supported!") 
+        # send end-effector command
+        self.end_effector.send_command(self.user_interface.end_effector_comd.action)
 
     def run(self):
         # check if command types from the two sides match
