@@ -12,5 +12,5 @@
   	  </include>
   	  
   	  <!-- run the teleop node -->
-<!-- 	  <node name="teleop_main" pkg="teleop" type="teleop_main.py" args="joy_tool_frame_3.cfg"/>  	  
- --></launch>
+	  <node name="teleop_main" pkg="teleop" type="teleop_main.py" args="joy_tool_frame_3.cfg"/>  	  
+</launch>

@@ -170,6 +170,8 @@ class EndEffector:
             'end_effector', 'name')
         self.type = config_data.get(
             'end_effector', 'type')
+        self.rate_Hz = config_data.getfloat(
+            'teleop', 'rate_Hz')
         rostopic_action_set = config_data.get(
             'end_effector', 'rostopic_action_set')
         self.pub_action_set = rospy.Publisher(
@@ -177,6 +179,7 @@ class EndEffector:
         # hand specific
         self.hand_open_def = NasaHandPoseLevels()
         self.hand_open_def.flex=0.0
+        self.hand_open_def.spread=1.0
         rostopic_hand_open_def = config_data.get(
             'end_effector', 'rostopic_hand_open_def')
         self.pub_hand_open_def = rospy.Publisher(
@@ -187,10 +190,17 @@ class EndEffector:
             self.pub_action_set.publish(1)
         elif (action=="open"):
             self.pub_action_set.publish(2)
-        elif (action=="spread"):
-            print("spreading")
-        elif (action=="unspread"):
-            print("unspreading")
+        elif ((action=="spread") or (action=="unspread")):
+            if (action=="spread"):
+                spread = self.hand_open_def.spread + 0.5/self.rate_Hz
+            else:
+                spread = self.hand_open_def.spread - 0.5/self.rate_Hz
+            if (spread>=1):
+                spread = 0.999
+            elif (spread<0.001):
+                spread = 0.001
+            self.hand_open_def.spread = spread
+            self.pub_hand_open_def.publish(self.hand_open_def)
         elif (action=="pause"):
             self.pub_action_set.publish(6)
         elif (action=="disable"):
