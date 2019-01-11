@@ -5,7 +5,7 @@ Arm Teleoperation - Universal Robot
 * Install [ROS-Industrial](http://wiki.ros.org/Industrial/Install)  
 `sudo apt-get install ros-kinetic-industrial-core`  
 `sudo apt-get install ros-kinetic-universal-robot`
-* Downlaod and build [cisst-saw](https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-building-using-catkin-build-tools-for-ros), using **catkin build tools** in a **seperate** workspace, following instructions in the documentation.  
+* Downlaod and build [cisst-saw](https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-building-using-catkin-build-tools-for-ros), using **catkin build tools** in a **seperate** workspace, following instructions in the documentation. Go under **sawUniversalRobot**, check the git branch to be **[devel]**, and compile again.  
 **Note:** In this application, we use the **[sawUniversalRobot](https://github.com/jhu-saw/sawUniversalRobot/tree/devel)** component to establish an interface that we can set velocities at 125 Hz.
 
 ## [Optional] Debuggin interface and tools
