@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>teleop_twist_marker</name>
+  <name>teleop_pose_marker</name>
   <version>0.0.0</version>
   <description>The teleop_twist_marker package</description>
 

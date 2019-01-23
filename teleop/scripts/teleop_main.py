@@ -137,14 +137,12 @@ class Manipulator:
         rostopic_pose_current = config_data.get(
             'manipulator', 'rostopic_pose_current')
         self.pose_current = PyKDL.Frame.Identity()
-        self.sub_pose_current = rospy.Subscriber(
-            rostopic_pose_current, PoseStamped, self.pose_current_CB)
+        rospy.Subscriber(rostopic_pose_current, PoseStamped, self.pose_current_CB)
         # subscriber - manipulator current joint states
         rostopic_joint_current = config_data.get(
             'manipulator', 'rostopic_joint_current')
         self.joint_current = JointState()
-        self.sub_joint_current = rospy.Subscriber(
-            rostopic_joint_current, JointState, self.joint_current_CB)
+        rospy.Subscriber(rostopic_joint_current, JointState, self.joint_current_CB)
         # publisher - manipulator commanded twist
         rostopic_twist_set = config_data.get(
             'manipulator', 'rostopic_twist_set')

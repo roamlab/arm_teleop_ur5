@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(teleop_twist_marker)
+project(teleop_pose_marker)
 
 
 ## Find catkin macros and libraries
