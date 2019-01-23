@@ -17,7 +17,6 @@ from std_msgs.msg import Float32
 from copy import deepcopy
 
 from teleop_twist_marker.msg import CartesianCommand
-
 def convert_to_message(T):
     t = geometry_msgs.msg.Pose()
     position = tf.transformations.translation_from_matrix(T)
@@ -83,7 +82,8 @@ class MarkerControl(object):
         self.robot = URDF.from_parameter_server()
 
         #Subscribes to information about what the current joint values are.
-        rospy.Subscriber("joint_states", JointState, self.callback)
+        rospy.Subscriber("/joint_states", JointState, self.callback)
+        rospy.Subscriber("/position_cartesian_current", geometry_msgs.msg.PoseStamped, self.pose_callback)
 
         # Publishes Cartesian goals
         self.pub_command = rospy.Publisher("/cartesian_command", CartesianCommand, queue_size=1)
@@ -98,6 +98,7 @@ class MarkerControl(object):
         #This is where we hold the most recent joint transforms
         self.joint_transforms = []
         self.x_current = tf.transformations.identity_matrix()
+        self.x_current_pose = geometry_msgs.msg.Pose()
         self.R_base = tf.transformations.identity_matrix()
 
         #Create "Interactive Marker" that we can manipulate in RViz
@@ -132,7 +133,8 @@ class MarkerControl(object):
         self.server = InteractiveMarkerServer("control_markers")
 
         control_marker = InteractiveMarker()
-        control_marker.header.frame_id = self.robot.get_root()
+        # control_marker.header.frame_id = self.robot.get_root()
+        control_marker.header.frame_id = "base"
         control_marker.name = "cc_marker"
 
         move_control = InteractiveMarkerControl()
@@ -225,6 +227,10 @@ class MarkerControl(object):
         msg = convert_to_trans_message(self.x_target)
         self.ik_command.publish(msg)
 
+    def pose_callback(self,poseStamped):
+        self.x_current_pose=poseStamped.pose
+
+
     def update_marker(self, T):
         # Note that we keep marker orientation fixed so that robot can be taken out of
         # singularity even when only doing translation only control
@@ -233,7 +239,8 @@ class MarkerControl(object):
         # Ttrans = tf.transformations.translation_matrix(
         #     tf.transformations.translation_from_matrix(T)
         # )
-        self.server.setPose("cc_marker", convert_to_message(T))
+        # self.server.setPose("cc_marker", convert_to_message(T))
+        self.server.setPose("cc_marker", self.x_current_pose)
         self.server.applyChanges()
 
     def redundancy_marker_feedback(self, feedback):       
