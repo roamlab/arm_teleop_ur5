@@ -1,0 +1,3 @@
+geometry_msgs/Transform x_target
+bool secondary_objective
+float32 q0_target
