@@ -12,9 +12,9 @@
   	  </include>
   	  
   	  <!-- run the teleop node -->
-	  <node name="teleop_main" pkg="teleop" type="teleop_main.py" args="joy_base_frame.cfg" output="screen" launch-prefix="xterm -e"/>  
+	  <node name="teleop_main" pkg="teleop" type="teleop_main.py" args="marker_control.cfg" output="screen" launch-prefix="xterm -e"/>  	  
 
-  	  <!-- run the Rviz with interactive marker -->
+	  <!-- run the Rviz with interactive marker -->
   	  <include file="$(find teleop)/launch/ur5_rvis.launch">
-  	  </include>	  
+  	  </include>
 </launch>

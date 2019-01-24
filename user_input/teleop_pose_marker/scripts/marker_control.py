@@ -6,7 +6,6 @@ import rospy
 from geometry_msgs.msg import Pose, PoseStamped
 from std_msgs.msg import Float32
 from sensor_msgs.msg import JointState
-from teleop_pose_marker.msg import CartesianCommand
 
 from interactive_markers.interactive_marker_server import *
 from interactive_markers.menu_handler import *
@@ -24,7 +23,7 @@ class MarkerControl(object):
         rospy.Subscriber("/position_cartesian_current", PoseStamped, self.pose_callback)
 
         # Publishes Cartesian goals
-        self.pub_command = rospy.Publisher("/cartesian_command", CartesianCommand, queue_size=1)
+        self.pub_command = rospy.Publisher("/cmd_pose", Pose, queue_size=1)
 
         #This is where we hold the most recent joint transforms
         self.x_current = Pose()
@@ -119,10 +118,7 @@ class MarkerControl(object):
         if not self.cc_mode: return
         self.mutex.acquire()
         if self.ee_tracking:
-            msg = CartesianCommand()
-            msg.x_target = self.x_target
-            msg.secondary_objective = False
-            self.pub_command.publish(msg)
+            self.pub_command.publish(self.x_target)
         self.mutex.release()
 
 

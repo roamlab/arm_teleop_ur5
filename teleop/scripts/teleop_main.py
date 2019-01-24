@@ -4,6 +4,7 @@
 
 import rospy
 import PyKDL
+import numpy as np
 from geometry_msgs.msg import Pose, PoseStamped, Twist, TwistStamped
 from tf_conversions import posemath as PoseMath
 from std_msgs.msg import Int32
@@ -84,9 +85,14 @@ class UserInterfaceDevice:
         # subscriber - manipulator command from user input
         rostopic_manipulator_comd = config_data.get(
             'user_interface', 'rostopic_manipulator_comd')
-        self.manipulator_comd = PyKDL.Twist()
-        self.sub_manipulator_comd = rospy.Subscriber(
-            rostopic_manipulator_comd, Twist, self.manipulator_comd_CB)
+        if (self.command_type=="pose"):
+            self.manipulator_comd = []
+            rospy.Subscriber(
+                rostopic_manipulator_comd, Pose, self.manipulator_comd_pose_CB)            
+        else:
+            self.manipulator_comd = PyKDL.Twist()
+            rospy.Subscriber(
+                rostopic_manipulator_comd, Twist, self.manipulator_comd_twist_CB)
         # subscriber - end-effector command from user input 
         # it is assumed that the joy states are sent
         rostopic_end_effector_comd = config_data.get(
@@ -95,7 +101,11 @@ class UserInterfaceDevice:
         self.sub_end_effector_comd = rospy.Subscriber(
             rostopic_end_effector_comd, Joy, self.end_effector_comd_CB)
 
-    def manipulator_comd_CB(self,msg_data):
+    def manipulator_comd_pose_CB(self,msg_data):
+        # msg_data is received in the type of [geometry_msgs/Pose]
+        self.manipulator_comd = PoseMath.fromMsg(msg_data)
+
+    def manipulator_comd_twist_CB(self,msg_data):
         # msg_data is received in the type of [geometry_msgs/twist]
         # self.manipulator_comd is presumed in the type of [PrKDL.Twist]
         self.manipulator_comd = convert_geometry_msgs_to_PyKDL_twist(msg_data)
@@ -148,17 +158,84 @@ class Manipulator:
             'manipulator', 'rostopic_twist_set')
         self.pub_twist_set = rospy.Publisher(
             rostopic_twist_set, TwistStamped, queue_size=1)
-        # publisher - manipulator commanded pose
-        rostopic_pose_set = config_data.get(
-            'manipulator', 'rostopic_pose_set')
-        self.pub_pose_set = rospy.Publisher(
-            rostopic_pose_set, PoseStamped, queue_size=1)
+        if (self.command_type=="pose"):
+            self.load_resolved_rates_config(config_data)
 
     def pose_current_CB(self, msg_data):
         self.pose_current = PoseMath.fromMsg(msg_data.pose)
 
     def joint_current_CB(self, msg_data):
         self.joint_current = msg_data
+
+    def resolved_rates(self,desiredPose):
+        # compute pose error (result in kdl.twist format)
+        poseError = PyKDL.diff(self.pose_current,desiredPose)
+        posErrNorm = poseError.vel.Norm()
+        rotErrNorm = poseError.rot.Norm()
+        # compute velocity magnitude based on position error norm
+        if (posErrNorm > self.resolvedRatesConfig['tolPos']):
+            tolPosition = self.resolvedRatesConfig['tolPos']
+            lambdaVel = self.resolvedRatesConfig['velRatio']
+            velMax = self.resolvedRatesConfig['velMax']
+            velMin = self.resolvedRatesConfig['velMin']
+            if posErrNorm > (lambdaVel * tolPosition):
+                velMag = velMax
+            else:
+                velMag = (velMin \
+                          + (posErrNorm - tolPosition) \
+                          * (velMax-velMin) / (tolPosition * (lambdaVel-1)))
+        else:
+            velMag = 0.0
+        # compute angular velocity magnitude based on rotation error norm
+        if rotErrNorm > self.resolvedRatesConfig['tolRot']:
+            tolRotation = self.resolvedRatesConfig['tolRot']
+            lambdaRot = self.resolvedRatesConfig['rotRatio']
+            angVelMax = self.resolvedRatesConfig['angVelMax']
+            angVelMin = self.resolvedRatesConfig['angVelMin']
+            if rotErrNorm > (lambdaRot * tolRotation):
+                angVelMag = angVelMax
+            else:
+                angVelMag = (angVelMin \
+                             + (rotErrNorm - tolRotation) \
+                             * (angVelMax - angVelMin) \
+                             / (tolRotation * (lambdaRot-1)))
+        else:
+            angVelMag = 0.0
+        # The resolved rates is implemented as Nabil Simaan's notes
+        # apply both the velocity and angular velocity in the error pose direction
+        desiredTwist = PyKDL.Twist()
+        poseError.vel.Normalize() # normalize to have the velocity direction
+        desiredTwist.vel = poseError.vel * velMag
+        poseError.rot.Normalize() # normalize to have the ang vel direction
+        desiredTwist.rot = poseError.rot * angVelMag
+        return desiredTwist
+
+    def send_command_twist(self,command_twist):
+        command_twist_msg = TwistStamped()
+        command_twist_msg.twist = (
+            convert_PyKDL_to_geometry_msgs_twist(command_twist))
+        self.pub_twist_set.publish(command_twist_msg)
+
+    def load_resolved_rates_config(self,config_data):
+        velMin = config_data.getfloat('resolved_rates', 'velMin') # minimum linear velocity [mm/sec]
+        velMax = config_data.getfloat('resolved_rates', 'velMax') # maximum linear velocity [mm/sec]
+        angVelMin = config_data.getfloat('resolved_rates', 'angVelMin') # minimum angular velocity [deg/sec]
+        angVelMax = config_data.getfloat('resolved_rates', 'angVelMax') # maximum angular velocity [deg/sec]
+        tolPos = config_data.getfloat('resolved_rates', 'tolPos') # positional tolerance [mm]
+        tolRot = config_data.getfloat('resolved_rates', 'tolRot') # rotational tolerance [degree]
+        velRatio = config_data.getfloat('resolved_rates', 'velRatio')
+        rotRatio = config_data.getfloat('resolved_rates', 'rotRatio')
+        self.resolvedRatesConfig = \
+        {   'velMin': velMin / 1000.0, # minimum linear velocity [m/sec]
+            'velMax': velMax / 1000.0, # maximum linear velocity [m/sec]
+            'angVelMin': angVelMin / 180.0 * np.pi, # minimum angular velocity [rad/sec]
+            'angVelMax': angVelMax / 180.0 * np.pi, # maximum angular velocity [rad/sec]
+            'tolPos': tolPos / 1000.0, # positional tolerance [m]
+            'tolRot': tolRot / 180.0 * np.pi, # rotational tolerance [rad]
+            'velRatio': velRatio, # the ratio of max velocity error radius to tolarance radius, this value >1
+            'rotRatio': rotRatio  # the ratio of max angular velocity error radius to tolarance radius, this value >1
+        }
+
 
 class EndEffector:
     def __init__(self, config_file_name):
@@ -230,8 +307,9 @@ class Teleop:
     def compute_send_command(self):
         # send manipulator command
         # for now, only twist mode is supported
-        compatible = (self.manipulator.command_type=="twist")
-        if compatible:
+        compatible = (
+            self.manipulator.command_type==self.user_interface.command_type)
+        if (compatible and (self.manipulator.command_type=="twist")):
             command_twist_in_robot = (
                 self.tf_master2robot*self.user_interface.manipulator_comd)
             if (self.manipulator.command_reference_frame=="end_effector_frame"):
@@ -239,17 +317,34 @@ class Teleop:
                     self.manipulator.pose_current*command_twist_in_robot)
             else:
                 command_twist_in_robot_base = command_twist_in_robot
-            command_twist_scaled = PyKDL.Twist(
-                command_twist_in_robot_base.vel*self.velocity_scale[0],
-                command_twist_in_robot_base.rot*self.velocity_scale[1])
-            command_twist_msg = TwistStamped()
-            command_twist_msg.twist = (
-                convert_PyKDL_to_geometry_msgs_twist(command_twist_scaled))
-            self.manipulator.pub_twist_set.publish(command_twist_msg)
+            command_twist_scaled = self.scale_twist_command(command_twist_in_robot_base)
+            print(command_twist_scaled)
+            self.manipulator.send_command_twist(command_twist_scaled)
+        elif (compatible and (self.manipulator.command_type=="pose")
+                and (not (self.user_interface.manipulator_comd==[]))):
+            command_pose_in_robot = (
+                self.tf_master2robot*self.user_interface.manipulator_comd)
+            if (self.manipulator.command_reference_frame=="end_effector_frame"):
+                command_pose_in_robot_base = (
+                    self.manipulator.pose_current*command_pose_in_robot)
+            else:
+                command_pose_in_robot_base = command_pose_in_robot
+            command_twist = self.manipulator.resolved_rates(command_pose_in_robot_base)
+            print(command_twist)
+            self.manipulator.send_command_twist(command_twist)
+        elif (compatible and (self.manipulator.command_type=="pose")
+                and (self.user_interface.manipulator_comd==[])):
+            pass
         else:
-            print("For now, only twist mode is supported!") 
+            print("Command_type(s) of Manipulator and User_interface do not match") 
         # send end-effector command
         self.end_effector.send_command(self.user_interface.end_effector_comd.action)
+
+    def scale_twist_command(self,command_twist):
+        command_twist_scaled = PyKDL.Twist(
+            command_twist.vel*self.velocity_scale[0],
+            command_twist.rot*self.velocity_scale[1])
+        return command_twist_scaled
 
     def run(self):
         # check if command types from the two sides match
