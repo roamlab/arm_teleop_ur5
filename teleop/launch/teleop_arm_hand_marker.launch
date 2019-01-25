@@ -20,5 +20,7 @@
   	  	args="topic_ns:=/control_markers target_frame:=/base">
   	  </node>
 
-
+	  <!-- run the video streaming and web video server-->
+	  <include file="$(find video_stream_opencv)/launch/camera.launch"></include>
+	  <node name="web_video_server" pkg="web_video_server" type="web_video_server"></node>
 </launch>
