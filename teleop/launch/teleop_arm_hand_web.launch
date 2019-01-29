@@ -1,0 +1,32 @@
+<launch>
+	  <!-- run NASA Hand -->
+	  <include file="$(find nasa_hand_robot)/launch/nasa_hand_no_UI.launch">
+	  </include>
+
+	  <!-- run UR5 -->
+	  <node name="universal_robot_cisst" pkg="universal_robot_ros" type="universal_robot" args="-i 192.168.1.202"/>
+
+  	  <!-- run the teleop node -->
+	  <node name="teleop_main" pkg="teleop" type="teleop_main.py" args="joy_base_frame.cfg" output="screen" launch-prefix="xterm -e"/>  	  
+
+	  <!-- run the Rviz with interactive marker -->
+  	  <include file="$(find teleop)/launch/ur5_rvis.launch">
+  	  </include>
+
+	  <!-- run the teleop_twist_joy node without needing a hardware joy -->
+  	  <include file="$(find teleop_twist_joy)/launch/teleop.launch">
+  	  	<arg name="joy_config" default="ps3-space6D" />
+  	  	<arg name="run_joy_node" default="false" />
+  	  </include>
+
+  	  <!-- run the web services for bridges to browser -->
+  	  <node name="tf2_web_republisher" pkg="tf2_web_republisher" type="tf2_web_republisher"> </node>
+  	  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"> </include>
+  	  <node name="interactive_marker_proxy" pkg="interactive_marker_proxy" type="proxy" 
+  	  	args="topic_ns:=/control_markers target_frame:=/base">
+  	  </node>
+
+	  <!-- run the video streaming and web video server-->
+	  <include file="$(find video_stream_opencv)/launch/camera.launch"></include>
+	  <node name="web_video_server" pkg="web_video_server" type="web_video_server"></node>
+</launch>

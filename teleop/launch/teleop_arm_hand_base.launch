@@ -7,9 +7,9 @@
 	  <node name="universal_robot_cisst" pkg="universal_robot_ros" type="universal_robot" args="-i 192.168.1.202"/>
 
 	  <!-- run teleop interface -->
-  	  <include file="$(find teleop_twist_joy)/launch/teleop.launch">
-  	  	<arg name="joy_config" default="ps3-space6D" />
-  	  </include>
+    <include file="$(find teleop_twist_joy)/launch/teleop.launch">
+    	<arg name="joy_config" default="ps3-space6D" />
+    </include>
   	  
   	  <!-- run the teleop node -->
 	  <node name="teleop_main" pkg="teleop" type="teleop_main.py" args="joy_base_frame.cfg" output="screen" launch-prefix="xterm -e"/>  
