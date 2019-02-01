@@ -42,9 +42,8 @@ def convert_PyKDL_to_geometry_msgs_twist(twist_PyKDL):
     return twist
 
 class EndEffectorCommand:
-    def __init__(self, config_file_name):
+    def __init__(self, config_data):
         # read the config file
-        config_data = read_config_file(config_file_name)
         self.action = 'disable'
         self.joy_buttons_def =  ast.literal_eval(config_data.get(
             'user_interface', 'joy_buttons_def'))
@@ -63,6 +62,11 @@ class UserInterfaceDevice:
         # device name
         self.name = config_data.get(
             'user_interface', 'name')
+        self.load_manipulator_comd_config(config_data)
+        self.load_end_effector_comd_config(config_data)
+
+    def load_manipulator_comd_config(self,config_data):
+        # this func load configurations about the manipulator command that the user_interface gives
         # device frame offsets
         rot_X = ast.literal_eval(config_data.get(
             'user_interface', 'TF_device2view_rot_X'))
@@ -93,11 +97,14 @@ class UserInterfaceDevice:
             self.manipulator_comd = PyKDL.Twist()
             rospy.Subscriber(
                 rostopic_manipulator_comd, Twist, self.manipulator_comd_twist_CB)
+
+    def load_end_effector_comd_config(self,config_data):
+        # this func load configurations about the end-effector command that the user_interface gives
         # subscriber - end-effector command from user input 
         # it is assumed that the joy states are sent
         rostopic_end_effector_comd = config_data.get(
             'user_interface', 'rostopic_end_effector_comd')
-        self.end_effector_comd = EndEffectorCommand(config_file_name)
+        self.end_effector_comd = EndEffectorCommand(config_data)
         self.sub_end_effector_comd = rospy.Subscriber(
             rostopic_end_effector_comd, Joy, self.end_effector_comd_CB)
 
@@ -318,7 +325,6 @@ class Teleop:
             else:
                 command_twist_in_robot_base = command_twist_in_robot
             command_twist_scaled = self.scale_twist_command(command_twist_in_robot_base)
-            print(command_twist_scaled)
             self.manipulator.send_command_twist(command_twist_scaled)
         elif (compatible and (self.manipulator.command_type=="pose")
                 and (not (self.user_interface.manipulator_comd==[]))):
@@ -330,7 +336,6 @@ class Teleop:
             else:
                 command_pose_in_robot_base = command_pose_in_robot
             command_twist = self.manipulator.resolved_rates(command_pose_in_robot_base)
-            print(command_twist)
             self.manipulator.send_command_twist(command_twist)
         elif (compatible and (self.manipulator.command_type=="pose")
                 and (self.user_interface.manipulator_comd==[])):
