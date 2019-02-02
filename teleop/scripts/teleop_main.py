@@ -7,7 +7,7 @@ import PyKDL
 import numpy as np
 from geometry_msgs.msg import Pose, PoseStamped, Twist, TwistStamped
 from tf_conversions import posemath as PoseMath
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, String
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Joy
 from nasa_hand_msgs.msg import PoseLevels as NasaHandPoseLevels
@@ -128,6 +128,11 @@ class Manipulator:
         config_data = read_config_file(config_file_name)
         self.name = config_data.get(
             'manipulator', 'name')
+        self.load_comd_config(config_data)
+        self.load_communication_config(config_data)
+
+    def load_comd_config(self,config_data):
+        # this func loads the command configuration of the manipulator
         # manipulator frame offsets
         rot_X = ast.literal_eval(config_data.get(
             'manipulator', 'TF_view2robot_rot_X'))
@@ -150,6 +155,11 @@ class Manipulator:
         # command_reference_frame
         self.command_reference_frame = config_data.get(
             'manipulator', 'command_reference_frame')
+        if (self.command_type=="pose"):
+            self.load_resolved_rates_config(config_data)
+    
+    def load_communication_config(self, config_data):
+        # this func loads the communication configurations, e.g. ros topics for current pose and joint
         # subscriber - manipulator current pose
         rostopic_pose_current = config_data.get(
             'manipulator', 'rostopic_pose_current')
@@ -165,8 +175,6 @@ class Manipulator:
             'manipulator', 'rostopic_twist_set')
         self.pub_twist_set = rospy.Publisher(
             rostopic_twist_set, TwistStamped, queue_size=1)
-        if (self.command_type=="pose"):
-            self.load_resolved_rates_config(config_data)
 
     def pose_current_CB(self, msg_data):
         self.pose_current = PoseMath.fromMsg(msg_data.pose)
@@ -295,8 +303,6 @@ class Teleop:
         # read the config file
         config_data = read_config_file(config_file_name)
         self.config_file_name = config_file_name
-        self.velocity_scale = ast.literal_eval(config_data.get(
-            'teleop', 'velocity_scale'))
         # init the teleop node
         rospy.init_node(config_data.get('teleop','name'))
         self.rate = rospy.Rate(config_data.getfloat(
@@ -305,11 +311,38 @@ class Teleop:
         self.user_interface = UserInterfaceDevice(config_file_name)
         # init manipulator
         self.manipulator = Manipulator(config_file_name)
-        # teleopeartion master to slave transformation
-        self.tf_master2robot = (
-            self.manipulator.tf_view2robot * self.user_interface.tf_dev2view)
         # end-effector
         self.end_effector = EndEffector(config_file_name)
+        # if a teleop reload_config option is available in the cfg file
+        if (config_data.has_option('teleop','rostopic_reload_config')):
+            rostopic_reload_config = config_data.get('teleop','rostopic_reload_config')
+            rospy.Subscriber(
+                rostopic_reload_config, String, self.reload_teleop_config_CB)            
+        # update teleop parameters 
+        self.update_teleop_config(config_data)
+
+    def reload_teleop_config_CB(self, string_msg):
+        # we use this func to reload a configuration file
+        # this is to change the teleoperation parameters on the fly.
+        config_file_name = string_msg.data
+        config_data = read_config_file(config_file_name)
+        self.manipulator.load_comd_config(config_data)
+        self.user_interface.load_manipulator_comd_config(config_data)
+        print("Configuration file ["+config_file_name+"] reloaded")
+        # update teleop parameters 
+        self.update_teleop_config(config_data)
+
+    def update_teleop_config(self, config_data):
+        #  this func is used in two places:
+        #   (1) init
+        #   (2) reloading a config
+        #   [Important] when updated transforms are reloaded, this func HAS TO BE CALLED
+        #   This because "tf_master2robot" needs to be updated by using all updated transformations
+                # teleopeartion master to slave transformation
+        self.tf_master2robot = (
+            self.manipulator.tf_view2robot * self.user_interface.tf_dev2view)
+        self.velocity_scale = ast.literal_eval(config_data.get(
+            'teleop', 'velocity_scale'))
 
     def compute_send_command(self):
         # send manipulator command
@@ -374,4 +407,3 @@ if __name__ == '__main__':
 
     except rospy.ROSInterruptException:
         pass
-

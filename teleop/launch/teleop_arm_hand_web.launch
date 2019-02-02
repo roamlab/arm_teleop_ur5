@@ -34,7 +34,7 @@
 
   <include file="$(find video_stream_opencv)/launch/camera.launch">
     <arg name="camera_name" value="camera_world" />
-    <arg name="video_stream_provider" value="0" />
+    <arg name="video_stream_provider" value="3" />
   </include>
 
   <node name="web_video_server" pkg="web_video_server" type="web_video_server"></node>
