@@ -5,8 +5,8 @@ import ipdb
 
 if __name__ == '__main__':
 	R = Rotation(
+		0, -1, 0,
 		-1, 0, 0,
-		0, 1, 0,
 		0, 0, -1)
 	theta = np.pi/180*(-45)
 	R_t = Rotation.RotY(theta)
