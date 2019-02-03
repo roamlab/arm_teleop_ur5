@@ -42,7 +42,8 @@ Before running the code, you need to source and define env var:
 `export ARM_TELEOP_UR5_SRC="<arm_teleop_ur5/src>"`  
 You may also choose to copy them at the end of your `~/.bashrc` file
 ### Check camera setup for teleoperation
- * run `ls -ltrh /dev/video*`
+ * run  
+ `ls -ltrh /dev/video*`  
  * you should see at least two video sources, something like **/dev/video[X]**, and they correspond to the video parameters **video_stream_provider** in the lannch file **teleop_arm_hand_web.launch**
 ### Main script
 run `roslaunch teleop teleop_arm_hand_web.launch`
