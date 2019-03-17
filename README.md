@@ -46,4 +46,7 @@ You may also choose to copy them at the end of your `~/.bashrc` file
  `ls -ltrh /dev/video*`  
  * you should see at least two video sources, something like **/dev/video[X]**, and they correspond to the video parameters **video_stream_provider** in the lannch file **teleop_arm_hand_web.launch**
 ### Main script
-run `roslaunch teleop teleop_arm_hand_web.launch`
+run `roslaunch teleop teleop_arm_hand_web.launch`  
+Note: although the website interface include the control interface for a hand, you need to launch the hand ros program seperately. For example:  
+run `roslaunch nasa_hand_robot nasa_hand_no_UI.launch`  
+and see https://github.com/roamlab/nasa_hand for more details.
