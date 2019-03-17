@@ -282,15 +282,17 @@ class EndEffector:
             self.pub_action_set.publish(2)
         elif ((action=="spread") or (action=="unspread")):
             if (action=="spread"):
-                spread = self.hand_open_def.spread + 0.5/self.rate_Hz
+                spread = self.hand_open_def.spread + 10/self.rate_Hz
             else:
-                spread = self.hand_open_def.spread - 0.5/self.rate_Hz
+                spread = self.hand_open_def.spread - 10/self.rate_Hz
             if (spread>=1):
                 spread = 0.999
-            elif (spread<0.001):
-                spread = 0.001
+            elif (spread<0.4):
+                spread = 0.4
             self.hand_open_def.spread = spread
-            self.pub_hand_open_def.publish(self.hand_open_def)
+            if (spread<=1):
+                self.pub_hand_open_def.publish(self.hand_open_def)
+            self.pub_action_set.publish(2)
         elif (action=="pause"):
             self.pub_action_set.publish(6)
         elif (action=="disable"):

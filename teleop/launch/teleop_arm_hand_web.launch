@@ -1,7 +1,5 @@
 <launch>
   <!-- run NASA Hand -->
-  <include file="$(find nasa_hand_robot)/launch/nasa_hand_no_UI.launch">
-	</include>
   <!-- run UR5 -->
 	<node name="universal_robot_cisst" pkg="universal_robot_ros" type="universal_robot" args="-i 192.168.1.202"/>
 
@@ -29,12 +27,12 @@
     <arg name="camera_name" value="camera_end_effector" />
     <arg name="flip_horizontal" value="true" />
     <arg name="flip_vertical" value="true" />
-    <arg name="video_stream_provider" value="4" />
+    <arg name="video_stream_provider" value="1" />
   </include>
 
   <include file="$(find video_stream_opencv)/launch/camera.launch">
     <arg name="camera_name" value="camera_world" />
-    <arg name="video_stream_provider" value="3" />
+    <arg name="video_stream_provider" value="0" />
   </include>
 
   <node name="web_video_server" pkg="web_video_server" type="web_video_server"></node>
