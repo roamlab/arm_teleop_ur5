@@ -1,0 +1,17 @@
+<launch>
+  <!-- run UR5 -->
+	<node name="universal_robot_cisst" pkg="universal_robot_ros" type="universal_robot" args="-i 192.168.1.202"/>
+
+  <!-- camera frame calculation -->
+  <node name="camera_tf" pkg="teleop" type="camera_tf.py" args="joy_base_frame.cfg"/>
+
+  <!-- realsense -->
+  <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+  </include>  
+
+	<!-- run the Rviz with interactive marker -->
+  <include file="$(find teleop)/launch/ur5_rvis.launch">
+  </include>
+
+
+</launch>
