@@ -53,3 +53,10 @@ run `roslaunch teleop teleop_arm_hand_web.launch`
 Note: although the website interface include the control interface for a hand, you need to launch the hand ros program seperately. For example:  
 run `roslaunch nasa_hand_robot nasa_hand_no_UI.launch`  
 and see https://github.com/roamlab/nasa_hand for more details.
+
+## Camera Calibration ##
+A camera is mounted on the end-effector (EE), and the frame offset between the camera and the EE needs calibrating for supervised autonomy. The calibration steps include:
+* run the robot using teach pandent to a pose that the camera can see its base
+* run `roslaunch teleop camera_calibration.launch`
+* adjust the interactive marker such that the pointcloud of the robot base and the urdf rendering overlap
+* copy the result output from the command line and input it in the config.cfg files
