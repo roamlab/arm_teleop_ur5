@@ -9,8 +9,6 @@
   <node if="$(arg state_publisher)" pkg="robot_state_publisher" type="robot_state_publisher" 
   	name="robot_state_publisher" output="screen" />
 
-  <node name="marker_control" pkg="teleop_pose_marker" type="marker_control.py" respawn="false" output="screen" launch-prefix="xterm -e"/>
-
   <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" respawn="false" output="screen"
 	args="-d $(find teleop)/config/ur5.rviz"/>
 

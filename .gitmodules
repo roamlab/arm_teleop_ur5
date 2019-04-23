@@ -9,6 +9,3 @@
 	path = user_input/teleop_twist_joy
 	url = git@github.com:roamlab/teleop_twist_joy.git
 	branch = indigo-devel
-[submodule "web_interface/video_stream_opencv"]
-	path = web_interface/video_stream_opencv
-	url = git@github.com:roamlab/video_stream_opencv.git

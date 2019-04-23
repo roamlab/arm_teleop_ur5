@@ -58,7 +58,7 @@ class CameraFrameCalibration:
     def init_frame_from_config(self, config_data):
         # init the ros rate
         self.rate = rospy.Rate(config_data.getfloat(
-            'teleop','rate_Hz'))
+            'camera','rate_Hz'))
         # frame
         quat = ast.literal_eval(config_data.get(
             'camera','TF_camera2ee_rot'))
