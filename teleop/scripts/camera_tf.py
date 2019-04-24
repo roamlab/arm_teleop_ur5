@@ -5,10 +5,8 @@ import roslib
 import tf
 import PyKDL
 from geometry_msgs.msg import Pose, PoseStamped
+from std_msgs.msg import Int32
 from tf_conversions import posemath as PoseMath
-# from std_msgs.msg import Int32, String
-# from sensor_msgs.msg import JointState
-# from sensor_msgs.msg import Joy
 import os
 import ConfigParser
 import ast
@@ -52,10 +50,10 @@ class CameraFrameCalibration:
         self.correcting = False
         self.camera_frame_correction = PyKDL.Frame.Identity()
         self.camera_frame = PyKDL.Frame.Identity()
-        self.init_frame_from_config(config_data)
+        self.init_frames_from_config(config_data)
         self.init_marker()
         
-    def init_frame_from_config(self, config_data):
+    def init_frames_from_config(self, config_data):
         # init the ros rate
         self.rate = rospy.Rate(config_data.getfloat(
             'camera','rate_Hz'))
@@ -74,11 +72,25 @@ class CameraFrameCalibration:
             'camera', 'rostopic_ee_frame')
         self.robot_ee_frame = PyKDL.Frame.Identity()
         rospy.Subscriber(rostopic_robot_ee, PoseStamped, self.robot_ee_frame_CB)
-        # publisher to camera frame
-        rostopic_camera_frame = config_data.get(
-            'camera', 'rostopic_camera_frame')
-        self.pub_camera_frame = rospy.Publisher(
-            rostopic_camera_frame, PoseStamped, queue_size=1)
+        # subscriber to object pose estimator
+        rostopic_obj_pose_est = config_data.get(
+            'object_perception', 'rostopic_obj_pose_in_cam')
+        self.obj_pose_in_cam = None
+        self.obj_pose_in_robot_base = None
+        rospy.Subscriber(rostopic_obj_pose_est, PoseStamped, self.obj_pose_est_CB)
+        # publisher to give command to the robot
+        rostopic_robot_command = config_data.get(
+            'robot_command', 'rostopic_robot_command')
+        self.pub_robot_command = rospy.Publisher(rostopic_robot_command, Pose, queue_size=1)
+        # subscriber to the flab of enabling the auto grasping
+        rostopic_robot_command_enable = config_data.get(
+            'robot_command', 'rostopic_robot_command_enable')
+        self.enable_robot_command = False
+        rospy.Subscriber(rostopic_robot_command_enable, Int32, self.enable_robot_command_CB)
+        # get hand offset from object pose
+        object_offset = ast.literal_eval(config_data.get(
+            'robot_command', 'object_offset'))
+        self.object_offset = PyKDL.Vector(*object_offset)
 
     def init_marker(self):
 
@@ -144,8 +156,27 @@ class CameraFrameCalibration:
         while not rospy.is_shutdown():
             if self.compute_camera_frame():
                 self.send_camera_tf()
-                self.send_camera_pose()
+                self.send_robot_command()
             self.rate.sleep()
+
+    def send_robot_command(self):
+        if self.enable_robot_command:
+            print("do something")
+            robot_command = self.obj_pose_in_robot_base
+            robot_command.p = robot_command.p + self.object_offset
+            # test by sending the TF
+            br = tf.TransformBroadcaster()
+            br.sendTransform(
+                (robot_command.p.x(),robot_command.p.y(),robot_command.p.z()),
+                robot_command.M.GetQuaternion(),
+                rospy.Time.now(),
+                "command_hand_pose",
+                "base")
+            # self.pub_robot_command.publish()
+            self.enable_robot_command=False
+
+    def enable_robot_command_CB(self, msg):
+        self.enable_robot_command = msg.data
 
     def compute_camera_frame(self):
         if self.robot_ee_frame_received:
@@ -174,11 +205,15 @@ class CameraFrameCalibration:
             "camera_link",
             "base")
 
-    def send_camera_pose(self):
-        camera_pose_msg = PoseStamped()
-        camera_pose_msg.pose = (
-            convert_PyKDL_to_geometry_msgs_pose(self.camera_frame))
-        self.pub_camera_frame.publish(camera_pose_msg)
+        if self.obj_pose_in_robot_base is not None:
+            br.sendTransform(
+                (self.obj_pose_in_robot_base.p.x(),self.obj_pose_in_robot_base.p.y(),self.obj_pose_in_robot_base.p.z()),
+                self.obj_pose_in_robot_base.M.GetQuaternion(),
+                rospy.Time.now(),
+                "obj_pose_est",
+                "base")
+
+
 
     def robot_ee_frame_CB(self, msg_data):
         self.robot_ee_frame = PoseMath.fromMsg(msg_data.pose)
@@ -187,6 +222,13 @@ class CameraFrameCalibration:
         else:
             self.update_marker(msg_data.pose)
             self.robot_ee_frame_received = True
+
+    def obj_pose_est_CB(self, msg_data):
+        self.obj_pose_in_cam = PoseMath.fromMsg(msg_data.pose)
+        if self.compute_camera_frame():
+            self.obj_pose_in_robot_base = self.camera_frame * self.obj_pose_in_cam 
+
+
 
     def update_marker(self, msg_data_pose):
         self.marker_server.setPose("corr_marker", msg_data_pose)
