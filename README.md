@@ -10,6 +10,10 @@ Arm Teleoperation - Universal Robot
 **Note:** In this application, we use the **[sawUniversalRobot](https://github.com/jhu-saw/sawUniversalRobot/tree/devel)** component to establish an interface that we can set velocities at 125 Hz.
 * As a web-based implementation, ros web tool utilities are also needed if one wishes to run a teleoperation via a browser. The code is available at [roamlab/teelop-ros-web-util](https://github.com/roamlab/teleop-ros-web-util). And rosbridge_server is needed, which can be installed:  
 `sudo apt-get install ros-kinetic-rosbridge-server`  
+`sudo apt-get install ros-kinetic-tf2-web-republisher`  
+`sudo apt-get install ros-kinetic-interactive-marker-proxy`  
+`sudo apt-get install ros-kinetic-web-video-server`  
+`sudo apt-get install ros-kinetic-video-stream-opencv`  
 
 ## [Optional] Debuggin interface and tools
 * Install iPython  
