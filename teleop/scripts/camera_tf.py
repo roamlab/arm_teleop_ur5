@@ -87,10 +87,13 @@ class CameraFrameCalibration:
             'robot_command', 'rostopic_robot_command_enable')
         self.enable_robot_command = False
         rospy.Subscriber(rostopic_robot_command_enable, Int32, self.enable_robot_command_CB)
-        # get hand offset from object pose
+        # get hand offset and default pickup orientation from object pose
         object_offset = ast.literal_eval(config_data.get(
             'robot_command', 'object_offset'))
         self.object_offset = PyKDL.Vector(*object_offset)
+        default_pickup_orientation = ast.literal_eval(config_data.get(
+            'robot_command', 'default_pickup_orientation'))
+        self.default_pickup_orientation = PyKDL.Rotation.Quaternion(*default_pickup_orientation)
 
     def init_marker(self):
 
@@ -161,9 +164,10 @@ class CameraFrameCalibration:
 
     def send_robot_command(self):
         if self.enable_robot_command:
-            print("do something")
+            # compute the robot command
             robot_command = self.obj_pose_in_robot_base
             robot_command.p = robot_command.p + self.object_offset
+            robot_command.M = self.default_pickup_orientation
             # test by sending the TF
             br = tf.TransformBroadcaster()
             br.sendTransform(
@@ -172,7 +176,8 @@ class CameraFrameCalibration:
                 rospy.Time.now(),
                 "command_hand_pose",
                 "base")
-            # self.pub_robot_command.publish()
+            # send the robot command
+            self.pub_robot_command.publish(convert_PyKDL_to_geometry_msgs_pose(robot_command))
             self.enable_robot_command=False
 
     def enable_robot_command_CB(self, msg):

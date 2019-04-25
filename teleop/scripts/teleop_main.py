@@ -287,8 +287,8 @@ class EndEffector:
                 spread = self.hand_open_def.spread - 10/self.rate_Hz
             if (spread>=1):
                 spread = 0.999
-            elif (spread<0.4):
-                spread = 0.4
+            elif (spread<0.6):
+                spread = 0.6
             self.hand_open_def.spread = spread
             if (spread<=1):
                 self.pub_hand_open_def.publish(self.hand_open_def)

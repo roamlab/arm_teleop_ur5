@@ -9,6 +9,7 @@ Panels:
         - /Axes1
         - /Axes2
         - /Axes3
+        - /Axes4
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -180,6 +181,13 @@ Visualization Manager:
       Name: Axes
       Radius: 0.00499999989
       Reference Frame: ee_link
+      Value: true
+    - Class: rviz/Axes
+      Enabled: true
+      Length: 0.0500000007
+      Name: Axes
+      Radius: 0.00499999989
+      Reference Frame: command_hand_pose
       Value: true
   Enabled: true
   Global Options:
