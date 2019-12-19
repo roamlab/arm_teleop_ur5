@@ -19,8 +19,4 @@ git pull
 cd "$src_path$teleop_joy_dir"
 git checkout indigo-devel
 git pull origin indigo-devel
-cd "$src_path$vid_stm_cv_dir"
-echo "Updating: $(pwd)"
-git checkout master
-git pull origin master
 cd "$src_path"
