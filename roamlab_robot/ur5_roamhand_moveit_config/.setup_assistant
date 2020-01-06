@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: roamlab_description
+    relative_path: urdf/ur5_roamhand_robot.urdf.xacro
+    xacro_args: "--inorder "
+  SRDF:
+    relative_path: config/ur5_roamhand.srdf
+  CONFIG:
+    author_name: Emily Hannigan
+    author_email: ejh2192@columbia.edu
+    generated_timestamp: 1578604738

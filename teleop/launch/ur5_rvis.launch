@@ -6,7 +6,7 @@
   <param name="robot_description" 
 	 command="$(find xacro)/xacro --inorder '$(find ur_description)/urdf/ur5_robot.urdf.xacro'" />
 
-  <node if="$(arg state_publisher)" pkg="robot_state_publisher" type="robot_state_publisher" 
+  <node if="$(arg state_publisher)" pkg="robot_state_publisher" type="robot_state_publisher"
   	name="robot_state_publisher" output="screen" />
 
   <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" respawn="false" output="screen"

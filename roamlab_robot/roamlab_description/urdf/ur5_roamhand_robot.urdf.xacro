@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<robot name="ur5_roamhand" xmlns:xacro="http://wiki.ros.org/xacro">
+<!-- include macros for UR5 and the 2f gripper -->
+
+  <!-- common stuff -->
+  <xacro:include filename="$(find ur_description)/urdf/common.gazebo.xacro" />
+
+  <!-- ur5 -->
+  <xacro:include filename="$(find ur_description)/urdf/ur5.urdf.xacro" />
+  <xacro:include filename="$(find roamlab_description)/urdf/roamhand_simple.urdf.xacro"/>
+  <xacro:include filename="$(find roamlab_description)/urdf/permanent_objects.urdf.xacro"/>
+  <xacro:property name="radius" value="0.17" />
+  <xacro:property name="length" value="0.4" />
+  <xacro:property name="mass" value="0.17" />
+  <xacro:property name="d6" value="0.0823" />
+  <xacro:property name="wrist_3_length" value="${d6}" />
+  <!-- create the robot + eef combo itself as a macro -->
+  <!-- <xacro:macro name="ur5_roamhand_robot" params="prefix"> -->
+
+  <!-- instantiate UR5 and 2f gripper -->
+  <!--   <xacro:ur5_robot prefix="" joint_limited="true"/> -->
+
+
+<!--   <xacro:macro name="cylinder_inertial" params="radius length mass *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <xacro:insert_block name="origin" />
+      <inertia ixx="${0.0833333 * mass * (3 * radius * radius + length * length)}" ixy="0.0" ixz="0.0"
+        iyy="${0.0833333 * mass * (3 * radius * radius + length * length)}" iyz="0.0"
+        izz="${0.5 * mass * radius * radius}" />
+    </inertial>
+  </xacro:macro>
+ -->
+    <!-- arm -->
+  <xacro:ur5_robot prefix="" joint_limited="true"
+    shoulder_pan_lower_limit="-1.57" shoulder_pan_upper_limit="1.57"
+    shoulder_lift_lower_limit="${-pi}" shoulder_lift_upper_limit="0.52" 
+    elbow_joint_lower_limit="${-pi}" elbow_joint_upper_limit="${pi}"
+    wrist_1_lower_limit="${-pi}" wrist_1_upper_limit="${pi}"
+    wrist_2_lower_limit="${-pi}" wrist_2_upper_limit="${pi}"
+    wrist_3_lower_limit="${-pi}" wrist_3_upper_limit="${pi}"
+  />
+
+  <xacro:roamhand_simple parent="ee_link" prefix="" radius="${radius}" length="${length}" mass="${mass}">
+    <origin xyz="${0.5*length} 0.0 0.0" rpy="${.5*pi} 0 ${.5*pi}"/>
+   </xacro:roamhand_simple>
+
+
+  <xacro:permanent_objects />
+
+</robot>
