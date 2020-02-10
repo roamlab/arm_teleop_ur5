@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="limited" default="false" doc="If true, limits joint range [-PI, PI] on all joints." />
+  
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find roamlab_description)/urdf/ur5_indenter_robot.urdf.xacro'" />
+</launch>

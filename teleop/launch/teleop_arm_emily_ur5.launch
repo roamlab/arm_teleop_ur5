@@ -1,0 +1,17 @@
+<launch>
+	  <!-- run UR5 -->
+	  <node name="universal_robot_cisst" pkg="universal_robot_ros" type="universal_robot" args="-i 192.168.1.202"/>
+<!--       <node name="ur5_upload" pkg="ur_description" type="ur5_upload.launch" /> -->
+<!--       <node name="ur5_moveit_plan" pkg="ur5_moveit_config" type="ur5_moveit_planning_execution" args="limited:=true" /> -->
+
+  	  <!-- run the teleop node -->
+	  <node name="teleop_main" pkg="teleop" type="teleop_main.py" args="joy_base_frame.cfg" output="screen" launch-prefix="xterm -e"/>
+	  
+	  <!-- run the marker control node -->
+	  <node name="keyboard_teleop" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" respawn="false" output="screen" launch-prefix="xterm -e"/>
+ 
+  	  <!-- run the Rviz with interactive marker -->
+  	  <include file="$(find teleop)/launch/ur5_rvis.launch">
+  	  </include>
+
+</launch>
