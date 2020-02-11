@@ -17,15 +17,15 @@ class LowPassCommandFilter(CommandFilterBaseClass):
             # filter
             average_command = np.average(self.command_storage_array, axis=0)
             # print('average_command', average_command)
-            command_difference = command-average_command
-            difference_limit = np.zeros(len(command_difference))
-            difference_limit[:] = self.difference_limit_value
-            if np.all(np.less(abs(command_difference), difference_limit)):
-                self.update_command_storage(command)
-                print('command not different enough from average, no command sent')
-                return None
-            else:
-                self.update_command_storage(command)
-                average_command = np.average(self.command_storage_array, axis=0)
-                return average_command
+            # command_difference = command-average_command
+            # difference_limit = np.zeros(len(command_difference))
+            # difference_limit[:] = self.difference_limit_value
+            # if np.all(np.less(abs(command_difference), difference_limit)):
+            #     self.update_command_storage(command)
+            #     print('command not different enough from average, no command sent')
+            #     return None
+            # else:
+            self.update_command_storage(command)
+            average_command = np.average(self.command_storage_array, axis=0)
+            return average_command
 

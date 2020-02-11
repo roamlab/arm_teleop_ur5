@@ -4,11 +4,18 @@ import numpy as np
 import tf
 from teleop.cartesian_controllers import CartesianControllerBaseClass
 from teleop.utils.transform_helpers import convert_pose_to_transform
+from teleop.utils import ResolvedRatesCalculator
 
 
 class EndEffectorFrameCartesianController(CartesianControllerBaseClass):
     def __init__(self, config_data, section_name):
         super(EndEffectorFrameCartesianController, self).__init__(config_data, section_name)
+        self.max_dx_norm = config_data.getfloat(section_name, 'max_dx_norm')
+        self.max_dw_norm = config_data.getfloat(section_name, 'max_dw_norm')
+        self.position_tolerance = config_data.getfloat(section_name, 'position_tolerance')
+        self.orientation_tolerance = config_data.getfloat(section_name, 'orientation_tolerance')
+        # resolved_rates_section_name = config_data.get(section_name, 'resolved_rates')
+        # self.resolved_rates_computer = ResolvedRatesCalculator(config_data, resolved_rates_section_name)
 
     def compute_vee(self, current_pose, desired_pose):
         """
@@ -24,6 +31,8 @@ class EndEffectorFrameCartesianController(CartesianControllerBaseClass):
         """
         fixed_T_tool_current = convert_pose_to_transform(current_pose)
         fixed_T_tool_desired = convert_pose_to_transform(desired_pose)
+        print('curernt_pose', current_pose)
+        print('desired_pose', desired_pose)
         # compute transform from current end-effector pose to desired one
         tool_cur_T_tool_des = np.dot(tf.transformations.inverse_matrix(fixed_T_tool_current), fixed_T_tool_desired)
         # get desired translational velocity in local frame
@@ -34,17 +43,20 @@ class EndEffectorFrameCartesianController(CartesianControllerBaseClass):
 
         # normalize
         # to obtain max end-effector velocity of 0.1m/s
-        if np.linalg.norm(dx) > 0.3:
-            dx = (0.1 / np.linalg.norm(dx)) * dx
+        # if np.linalg.norm(dx) < self.position_tolerance:
+        #     dx = np.zeros(3)
+        if np.linalg.norm(dx) > self.max_dx_norm:
+            dx = (self.max_dx_norm / np.linalg.norm(dx)) * dx
 
         # get desired angular velocity in local frame
-
         tool_cur_R_tool_des = tool_cur_T_tool_des[0:3, 0:3]
         angle, axis = self.rotation_from_matrix(tool_cur_R_tool_des)
         dw = angle * axis
         # normalize to max end-effector angular velocity of 1 rad/s
-        if np.linalg.norm(dw) > 1.0:
-            dw = (1.0 / np.linalg.norm(dw)) * dw
+        # if np.linalg.norm(dw) < self.orientation_tolerance:
+        #     dw = np.zeros(3)
+        if np.linalg.norm(dw) > self.max_dw_norm:
+            dw = (self.max_dw_norm / np.linalg.norm(dw)) * dw
 
         # assemble translational and angular velocities
         v_ee = np.zeros(6, dtype=np.float64)
@@ -78,7 +90,7 @@ class EndEffectorFrameCartesianController(CartesianControllerBaseClass):
         for i in range(0, len(dq)):
             if abs(dq[i]) > max_dq:
                 max_dq = abs(dq[i])
-        if max_dq > 1.0:
+        if max_dq > .1:
             for i in range(0, len(dq)):
                 dq[i] = dq[i] / max_dq
         return dq

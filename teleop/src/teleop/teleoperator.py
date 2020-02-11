@@ -5,7 +5,6 @@ from geometry_msgs.msg import Pose, PoseStamped, Twist, TwistStamped
 from sensor_msgs.msg import JointState
 from moveit_msgs.msg import RobotState
 import copy
-import ast
 import numpy as np
 import sys
 from teleop import Manipulator
@@ -36,8 +35,8 @@ class Teleoperator:
 
         # self.velocity_scale = ast.literal_eval(config_data.get(section_name, 'velocity_scale'))
         self.zero_needed = False
-    #
-    #
+
+    # TODO: check frames
     # def check_frames(self):
     #     assert self.manipulator.reference_frame == self.manipulator_user_interface.reference_frame
     #     assert self.manipulator.moving_frame == self.manipulator_user_interface.moving_frame
@@ -83,9 +82,9 @@ class Teleoperator:
 
         """
         self.mutex.acquire()
+        command = None
         if not self.manipulator_user_interface.cmd == []:
-
-            if (time.time() - self.manipulator_user_interface.cmd_time) < 1.0:
+            if (time.time() - self.manipulator_user_interface.cmd_time) < .5:
                 # if no command has been issued in .1 seconds, send a 0 command, otherwise, use regular command
                 current_pose = copy.deepcopy(self.manipulator.pose_current)  # Pose() of the end effector in fixed frame
                 fixed_T_ee_current = convert_pose_to_transform(current_pose)  # fixed frame to end effector transform
@@ -101,36 +100,36 @@ class Teleoperator:
                     v_ee = self.cart_ctrl.compute_vee(current_pose, desired_pose)
                 else:
                     raise TypeError('user_interface.command_type is not recognized')
-
-                qd = self.cart_ctrl.compute_qd(v_ee, transforms, fixed_T_ee_current, self.manipulator.joint_axes)
-                # TODO make sure jacobian for world cartesian controller can handle joint axes that are not all z axis
-                if self.check_for_collision and self.check_collision(qd, self.manipulator.joint_current):
-                    print('collision detected, changing command to 0')
-                    command = self.manipulator.get_zero_command()
-                else:
-                    if self.manipulator.command_type == 'twist_stamped':
-                        command = TwistStamped()
-                        command.twist = convert_numpy_array_to_twist(v_ee)
-                    elif self.manipulator.command_type == 'joint_state':
-                        command = JointState()
-                        command.name = self.manipulator.joint_names
-                        command.velocity = qd
+                if not np.allclose(np.zeros(6), v_ee):
+                    # if v_ee is close to zero, command is None
+                    qd = self.cart_ctrl.compute_qd(v_ee, transforms, fixed_T_ee_current, self.manipulator.joint_axes)
+                    if self.check_for_collision and self.check_collision(qd, self.manipulator.joint_current):
+                        print('collision detected, changing command to 0')
                     else:
-                        raise ValueError("self.manipulator.command_type:"
-                                         " {} not recognized".format(self.manipulator.command_type))
+                        if self.manipulator.command_type == 'twist_stamped':
+                            command = TwistStamped()
+                            command.twist = convert_numpy_array_to_twist(v_ee)
+                        elif self.manipulator.command_type == 'joint_state':
+                            command = JointState()
+                            command.header.stamp = rospy.Time.now()
+                            command.name = self.manipulator.joint_names
+                            command.velocity = qd
+                        else:
+                            raise ValueError("self.manipulator.command_type:"
+                                             " {} not recognized".format(self.manipulator.command_type))
 
-                self.zero_needed = True
+        if command is None:
+            if self.zero_needed:
+                print('sending zero')
+                command = self.manipulator.get_zero_command()
                 self.manipulator.send_command(command)
+                self.zero_needed = False
             else:
-                if self.zero_needed:
-                    print('sending zero')
-                    command = self.manipulator.get_zero_command()
-                    self.manipulator.send_command(command)
-                    self.zero_needed = False
-                else:
-                    print('Zero already sent')
+                print('Zero already sent')
         else:
-            print('no commands issued')
+            self.manipulator.send_command(command)
+            self.zero_needed = True
+
         self.mutex.release()
 
     def compute_end_effector_command(self):
@@ -141,7 +140,6 @@ class Teleoperator:
 
     def check_collision(self, qd, q_current):
         """
-
         Args:
             qd (np.array): The computed joint velocities that are testing for future collisions
             q_current (JointState): The current joint values of the robot
