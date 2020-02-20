@@ -36,12 +36,6 @@ class Teleoperator:
 
         # self.velocity_scale = ast.literal_eval(config_data.get(section_name, 'velocity_scale'))
         self.zero_needed = False
-    #
-    #
-    # def check_frames(self):
-    #     assert self.manipulator.reference_frame == self.manipulator_user_interface.reference_frame
-    #     assert self.manipulator.moving_frame == self.manipulator_user_interface.moving_frame
-    #     assert self.manipulator.command_publisher.reference_frame == self.manipulator.
 
     def _init_end_effector(self, config_data, section_name):
         # initialize end effector if one is defined in config
@@ -103,7 +97,6 @@ class Teleoperator:
                     raise TypeError('user_interface.command_type is not recognized')
 
                 qd = self.cart_ctrl.compute_qd(v_ee, transforms, fixed_T_ee_current, self.manipulator.joint_axes)
-                # TODO make sure jacobian for world cartesian controller can handle joint axes that are not all z axis
                 if self.check_for_collision and self.check_collision(qd, self.manipulator.joint_current):
                     print('collision detected, changing command to 0')
                     command = self.manipulator.get_zero_command()
